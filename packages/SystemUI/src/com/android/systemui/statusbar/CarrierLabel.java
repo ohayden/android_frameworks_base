@@ -46,7 +46,7 @@ import android.net.wifi.WifiManager;
 public class CarrierLabel extends TextView {
     private boolean mAttached;
 
-// FLC
+// FLC - ADDED
     String networkName = "";
     String wifiSSID = "";
 
@@ -73,8 +73,9 @@ public class CarrierLabel extends TextView {
             IntentFilter filter = new IntentFilter();
             filter.addAction(Telephony.Intents.SPN_STRINGS_UPDATED_ACTION);
 
-filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
+// FLC - ADDED
+            filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+            filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
 
             getContext().registerReceiver(mIntentReceiver, filter, null, getHandler());
         }
@@ -93,8 +94,8 @@ filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+
 // FLC - ADDED
-Slog.d("CarrierLabel", "FLC:action=" + action);
             if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION) || action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
                 updateWifiSSID(context);
             }
