@@ -103,7 +103,7 @@ public class CarrierLabel extends TextView {
     };
 
     /* refreshText is the common function to update the text displayed, it only refreshes the text with current values */
-    private void refreshText(void) {
+    private void refreshText() {
         setText(networkName + (wifiSSID.equals("") ? "" : " - " + wifiSSID));
     }
 
@@ -112,7 +112,7 @@ public class CarrierLabel extends TextView {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
 
-        if(wifiInfo.getSSID()equals(null)) {
+        if(wifiInfo.getSSID().equals(null)) {
             wifiSSID = "";
         } else {
             wifiSSID = wifiInfo.getSSID();
