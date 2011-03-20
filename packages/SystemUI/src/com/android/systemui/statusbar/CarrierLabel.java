@@ -32,12 +32,24 @@ import java.util.TimeZone;
 
 import com.android.internal.R;
 
+/* B-FLC ADDED*/
+//import android.content.Context;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+/* E-FLC ADDED*/
+
+
 /**
  * This widget display an analogic clock with two hands for hours and
  * minutes.
  */
 public class CarrierLabel extends TextView {
     private boolean mAttached;
+
+// FLC
+    String networkName = "";
+    String wifiSSID = "";
+
 
     public CarrierLabel(Context context) {
         this(context, null);
@@ -49,7 +61,7 @@ public class CarrierLabel extends TextView {
 
     public CarrierLabel(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        updateNetworkName(false, null, false, null);
+        updateNetworkName(context, false, null, false, null);
     }
 
     @Override
@@ -60,6 +72,10 @@ public class CarrierLabel extends TextView {
             mAttached = true;
             IntentFilter filter = new IntentFilter();
             filter.addAction(Telephony.Intents.SPN_STRINGS_UPDATED_ACTION);
+
+filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
+
             getContext().registerReceiver(mIntentReceiver, filter, null, getHandler());
         }
     }
@@ -77,8 +93,14 @@ public class CarrierLabel extends TextView {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+// FLC - ADDED
+Slog.d("CarrierLabel", "FLC:action=" + action);
+            if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION) || action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
+                updateWifiSSID(context);
+            }
+
             if (Telephony.Intents.SPN_STRINGS_UPDATED_ACTION.equals(action)) {
-                updateNetworkName(intent.getBooleanExtra(Telephony.Intents.EXTRA_SHOW_SPN, false),
+                updateNetworkName(context, intent.getBooleanExtra(Telephony.Intents.EXTRA_SHOW_SPN, false),
                         intent.getStringExtra(Telephony.Intents.EXTRA_SPN),
                         intent.getBooleanExtra(Telephony.Intents.EXTRA_SHOW_PLMN, false),
                         intent.getStringExtra(Telephony.Intents.EXTRA_PLMN));
@@ -86,7 +108,22 @@ public class CarrierLabel extends TextView {
         }
     };
 
-    void updateNetworkName(boolean showSpn, String spn, boolean showPlmn, String plmn) {
+/* FLC ADDED*/
+    void updateWifiSSID(Context context) {
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+
+        wifiSSID = wifiInfo.getSSID();
+        if(wifiSSID != null) {
+            wifiSSID = " - " + wifiSSID;
+        } else {
+            wifiSSID = "";
+        }
+
+	setText(networkName + wifiSSID);
+    }
+
+    void updateNetworkName(Context context, boolean showSpn, String spn, boolean showPlmn, String plmn) {
         if (false) {
             Slog.d("CarrierLabel", "updateNetworkName showSpn=" + showSpn + " spn=" + spn
                     + " showPlmn=" + showPlmn + " plmn=" + plmn);
@@ -104,14 +141,15 @@ public class CarrierLabel extends TextView {
             str.append(spn);
             something = true;
         }
-        if (something) {
-            setText(str.toString());
-        } else {
-            setText(com.android.internal.R.string.lockscreen_carrier_default);
-        }
-    }
 
-    
+        if (something) {
+            networkName = str.toString();
+        } else {
+            networkName = context.getString(com.android.internal.R.string.lockscreen_carrier_default);
+        }
+
+        setText(networkName + wifiSSID);
+    }   
 }
 
 
