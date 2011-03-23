@@ -64,9 +64,13 @@ public class WifiLabel extends TextView {
         if (!mAttached) {
             mAttached = true;
             IntentFilter filter = new IntentFilter();
+
             filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION );
-//            filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-//            filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
+            filter.addAction(WifiManager.NETWORK_IDS_CHANGED_ACTION);
+            filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+            filter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
+            filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION );
+            filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
 
             getContext().registerReceiver(mIntentReceiver, filter, null, getHandler());
         }
