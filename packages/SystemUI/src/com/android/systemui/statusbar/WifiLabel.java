@@ -20,7 +20,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.provider.Telephony;
 import android.util.AttributeSet;
 import android.util.Slog;
 import android.view.View;
@@ -38,25 +37,24 @@ import android.net.wifi.WifiManager;
 
 
 /**
- * This widget displays the carrier label along with the WiFi SSID.
+ * This widget displays the currently connected Wifi SSID name.
  */
-public class CarrierLabel extends TextView {
+public class WifiLabel extends TextView {
     private boolean mAttached;
 
-    String networkName = "";
     String wifiSSID = "";
 
-    public CarrierLabel(Context context) {
+    public WifiLabel(Context context) {
         this(context, null);
     }
 
-    public CarrierLabel(Context context, AttributeSet attrs) {
+    public WifiLabel(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public CarrierLabel(Context context, AttributeSet attrs, int defStyle) {
+    public WifiLabel(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        updateNetworkName(context, false, null, false, null);
+        updateWifiSSID(context);
     }
 
     @Override
@@ -66,8 +64,6 @@ public class CarrierLabel extends TextView {
         if (!mAttached) {
             mAttached = true;
             IntentFilter filter = new IntentFilter();
-            filter.addAction(Telephony.Intents.SPN_STRINGS_UPDATED_ACTION);
-            // Added two filters for SSID change monitoring
             filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
             filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
 
@@ -92,22 +88,10 @@ public class CarrierLabel extends TextView {
             if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION) || action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
                 updateWifiSSID(context);
             }
-
-            if (Telephony.Intents.SPN_STRINGS_UPDATED_ACTION.equals(action)) {
-                updateNetworkName(context, intent.getBooleanExtra(Telephony.Intents.EXTRA_SHOW_SPN, false),
-                        intent.getStringExtra(Telephony.Intents.EXTRA_SPN),
-                        intent.getBooleanExtra(Telephony.Intents.EXTRA_SHOW_PLMN, false),
-                        intent.getStringExtra(Telephony.Intents.EXTRA_PLMN));
-            }
         }
     };
 
-    /* refreshText is the common function to update the text displayed, it only refreshes the text with current values */
-    void refreshText() {
-        setText(networkName + (wifiSSID == "" ? "" : " - " + wifiSSID));
-    }
-
-    /* updateWifiSSID keeps track of changes made to the SSID and refreshes the text displayed */
+    /* updateWifiSSID keeps track of changes made to the SSID and refreshes the text displayed  */
     void updateWifiSSID(Context context) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
@@ -116,38 +100,9 @@ public class CarrierLabel extends TextView {
         if(wifiSSID == null) {
             wifiSSID = "";
         }
-wifiSSID = "";
-        refreshText();
+
+        setText(wifiSSID);
     }
-
-    /* updateNetworkName keeps track of changes made to the carrier label and refreshes the text displayed */
-    void updateNetworkName(Context context, boolean showSpn, String spn, boolean showPlmn, String plmn) {
-        if (false) {
-            Slog.d("CarrierLabel", "updateNetworkName showSpn=" + showSpn + " spn=" + spn
-                    + " showPlmn=" + showPlmn + " plmn=" + plmn);
-        }
-        StringBuilder str = new StringBuilder();
-        boolean something = false;
-        if (showPlmn && plmn != null) {
-            str.append(plmn);
-            something = true;
-        }
-        if (showSpn && spn != null) {
-            if (something) {
-                str.append('\n');
-            }
-            str.append(spn);
-            something = true;
-        }
-
-        if (something) {
-            networkName = str.toString();
-        } else {
-            networkName = context.getString(com.android.internal.R.string.lockscreen_carrier_default);
-        }
-
-        refreshText();
-    }   
 }
 
 
