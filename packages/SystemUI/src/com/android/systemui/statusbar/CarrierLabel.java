@@ -32,19 +32,12 @@ import java.util.TimeZone;
 
 import com.android.internal.R;
 
-// Added WifiInfo and WifiManager for SSID 
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-
-
 /**
- * This widget displays the carrier label along with the WiFi SSID.
+ * This widget display an analogic clock with two hands for hours and
+ * minutes.
  */
 public class CarrierLabel extends TextView {
     private boolean mAttached;
-
-    String networkName = "";
-    String wifiSSID = "";
 
     public CarrierLabel(Context context) {
         this(context, null);
@@ -67,10 +60,6 @@ public class CarrierLabel extends TextView {
             mAttached = true;
             IntentFilter filter = new IntentFilter();
             filter.addAction(Telephony.Intents.SPN_STRINGS_UPDATED_ACTION);
-            // Added two filters for SSID change monitoring
-            filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-            filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
-
             getContext().registerReceiver(mIntentReceiver, filter, null, getHandler());
         }
     }
@@ -88,11 +77,6 @@ public class CarrierLabel extends TextView {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-
-            if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION) || action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
-                updateWifiSSID(context);
-            }
-
             if (Telephony.Intents.SPN_STRINGS_UPDATED_ACTION.equals(action)) {
                 updateNetworkName(context, intent.getBooleanExtra(Telephony.Intents.EXTRA_SHOW_SPN, false),
                         intent.getStringExtra(Telephony.Intents.EXTRA_SPN),
@@ -102,25 +86,6 @@ public class CarrierLabel extends TextView {
         }
     };
 
-    /* refreshText is the common function to update the text displayed, it only refreshes the text with current values */
-    void refreshText() {
-        setText(networkName + (wifiSSID == "" ? "" : " - " + wifiSSID));
-    }
-
-    /* updateWifiSSID keeps track of changes made to the SSID and refreshes the text displayed */
-    void updateWifiSSID(Context context) {
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-
-        wifiSSID = wifiInfo.getSSID();
-        if(wifiSSID == null) {
-            wifiSSID = "";
-        }
-wifiSSID = "";
-        refreshText();
-    }
-
-    /* updateNetworkName keeps track of changes made to the carrier label and refreshes the text displayed */
     void updateNetworkName(Context context, boolean showSpn, String spn, boolean showPlmn, String plmn) {
         if (false) {
             Slog.d("CarrierLabel", "updateNetworkName showSpn=" + showSpn + " spn=" + spn
@@ -139,15 +104,14 @@ wifiSSID = "";
             str.append(spn);
             something = true;
         }
-
         if (something) {
-            networkName = str.toString();
+            setText(str.toString());
         } else {
-            networkName = context.getString(com.android.internal.R.string.lockscreen_carrier_default);
+            setText(context.getString(com.android.internal.R.string.lockscreen_carrier_default));
         }
+    }
 
-        refreshText();
-    }   
+    
 }
 
 
